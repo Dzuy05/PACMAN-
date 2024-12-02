@@ -13,9 +13,124 @@ from sprites import MazeSprites
 from mazedata import MazeData
 from hand import HandController
 from direction_handler import process_hand_direction
+from screen import TitleScreen
+from option import OptionScreen  
+from sprites import Spritesheet  
+import settings
+import sys
+import os
+import json
+
+HIGH_SCORES_FILE = "high_scores.json"
+
+def load_high_scores():
+    if not os.path.exists(HIGH_SCORES_FILE):
+        with open(HIGH_SCORES_FILE, 'w') as f:
+            json.dump([], f)
+    with open(HIGH_SCORES_FILE, 'r') as f:
+        return json.load(f)
+
+def save_high_scores(high_scores):
+    with open(HIGH_SCORES_FILE, 'w') as f:
+        json.dump(high_scores, f, indent=4)
+
+def showScoreScreen(screen, score):
+    pygame.font.init()
+    font = pygame.font.Font("PressStart2P-Regular.ttf", 16)
+    large_font = pygame.font.Font("PressStart2P-Regular.ttf", 24)
+    clock = pygame.time.Clock()
+    user_text = ''
+    active = False
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = color_inactive
+
+    input_box = pygame.Rect(SCREENWIDTH//2 - 100, SCREENHEIGHT//2, 200, 50)
+    done = False
+    submitted = False
+
+    try:
+        background = pygame.image.load(os.path.join("2.png")).convert()
+        background = pygame.transform.scale(background, (SCREENWIDTH, SCREENHEIGHT))
+    except pygame.error as e:
+        print(f"Lỗi khi tải hình nền: {e}")
+        background = None
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    active = not active
+                else:
+                    active = False
+                color = color_active if active else color_inactive
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        if user_text.strip() == '':
+                            user_text = 'Player'
+                        high_scores = load_high_scores()
+                        high_scores.append({"name": user_text, "score": score})
+                        high_scores = sorted(high_scores, key=lambda x: x['score'], reverse=True)
+                        high_scores = high_scores[:7]
+                        save_high_scores(high_scores)
+                        submitted = True
+                    elif event.key == pygame.K_BACKSPACE:
+                        user_text = user_text[:-1]
+                    else:
+                        user_text += event.unicode
+        if background:
+            screen.blit(background, (0, 0))
+        else:
+            screen.fill((0, 0, 0))
+
+        if not submitted:
+            score_surf = large_font.render(f"Your Score: {score}", True, (255, 255, 255))
+            score_rect = score_surf.get_rect(center=(SCREENWIDTH//2, SCREENHEIGHT//2 - 100))
+            screen.blit(score_surf, score_rect)
+
+            pygame.draw.rect(screen, color, input_box, 2)
+
+            text_surf = font.render(user_text, True, (255, 255, 255))
+            screen.blit(text_surf, (input_box.x+5, input_box.y+10))
+
+            prompt_surf = font.render("Enter your name and press Enter:", True, (255, 255, 255))
+            prompt_rect = prompt_surf.get_rect(center=(SCREENWIDTH//2, SCREENHEIGHT//2 - 50))
+            screen.blit(prompt_surf, prompt_rect)
+        else:
+            high_scores = load_high_scores()
+
+            title_surf = large_font.render("High Scores", True, (255, 215, 0))
+            title_rect = title_surf.get_rect(center=(SCREENWIDTH//2, SCREENHEIGHT//2 - 150))
+            screen.blit(title_surf, title_rect)
+
+            for idx, entry in enumerate(high_scores):
+                name = entry['name']
+                entry_score = entry['score']
+                entry_text = f"{idx + 1}. {name}: {entry_score}"
+                entry_surf = font.render(entry_text, True, (255, 255, 255))
+                entry_rect = entry_surf.get_rect(center=(SCREENWIDTH//2, SCREENHEIGHT//2 - 100 + idx * 40))
+                screen.blit(entry_surf, entry_rect)
+
+            back_surf = font.render("Press ESC to return to Main Menu", True, (255, 255, 255))
+            back_rect = back_surf.get_rect(center=(SCREENWIDTH//2, SCREENHEIGHT//2 + 220))
+            screen.blit(back_surf, back_rect)
+
+        pygame.display.flip()
+        clock.tick(30)
+
+        if submitted:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_ESCAPE]:
+                done = True
 
 class GameController(object):
-    def __init__(self):
+    def __init__(self, skin="Pacman"):
+        self.skin = skin
+        self.spritesheet = Spritesheet(theme=self.skin)  
         pygame.init()
         self.screen = pygame.display.set_mode(SCREENSIZE, 0, 32)
         self.background = None
@@ -36,6 +151,11 @@ class GameController(object):
         self.fruitNode = None
         self.mazedata = MazeData()
         self.hand = HandController()
+        self.running = True
+
+        if not os.path.exists("highscores.txt"):
+            with open("highscores.txt", "w") as file:
+                file.write("# Điểm số sẽ được thêm vào dưới dạng 'Tên: Điểm số'\n")
 
     def setBackground(self):
         self.background_norm = pygame.surface.Surface(SCREENSIZE).convert()
@@ -48,6 +168,8 @@ class GameController(object):
         self.background = self.background_norm
 
     def startGame(self):      
+        self.hand.start()
+
         self.mazedata.loadMaze(self.level)
         self.mazesprites = MazeSprites(self.mazedata.obj.name+".txt", self.mazedata.obj.name+"_rotation.txt")
         self.setBackground()
@@ -69,6 +191,9 @@ class GameController(object):
         self.ghosts.inky.startNode.denyAccess(RIGHT, self.ghosts.inky)
         self.ghosts.clyde.startNode.denyAccess(LEFT, self.ghosts.clyde)
         self.mazedata.obj.denyGhostsAccess(self.ghosts, self.nodes)
+
+        while self.running:
+            self.update()
 
     def startGame_old(self):      
         self.mazedata.loadMaze(self.level)
@@ -102,7 +227,7 @@ class GameController(object):
         
 
     def update(self):
-        dt = self.clock.tick(30) / 1000.0
+        dt = self.clock.tick(60) / 1000.0
         self.textgroup.update(dt)
         self.pellets.update(dt)
         if not self.pause.paused:
@@ -124,9 +249,10 @@ class GameController(object):
             self.pacman.update(dt)
 
         if self.pacman.alive:
-            pass
+            if not self.pause.paused:
+                self.pacman.update(dt)
         else:
-            pass
+            self.pacman.update(dt)
 
         if self.flashBG:
             self.flashTimer += dt
@@ -196,10 +322,22 @@ class GameController(object):
                         self.ghosts.hide()
                         if self.lives <= 0:
                             self.textgroup.showText(GAMEOVERTXT)
-                            self.pause.setPause(pauseTime=3, func=self.restartGame)
+                            self.pause.setPause(pauseTime=3, func=self.endGame)
                         else:
                             self.pause.setPause(pauseTime=3, func=self.resetLevel)
-    
+
+    def endGame(self):
+        self.hand.stop()
+        showScoreScreen(self.screen, self.score)
+        self.running = False
+
+    def restartToTitle(self):
+        self.hand.stop()
+        pygame.quit()
+        import subprocess
+        subprocess.call([sys.executable] + sys.argv)
+        sys.exit()
+
     def checkFruitEvents(self):
         if self.pellets.numEaten == 50 or self.pellets.numEaten == 140:
             if self.fruit is None:
@@ -281,9 +419,26 @@ class GameController(object):
 
         pygame.display.update()
 
-
 if __name__ == "__main__":
-    game = GameController()
-    game.startGame()
+    pygame.init()
+    screen = pygame.display.set_mode(SCREENSIZE, 0, 32)
+    
     while True:
-        game.update()
+        title_screen = TitleScreen(screen)
+        selection = title_screen.run()  
+        
+        if selection == "START":
+            game = GameController(skin=settings.get_theme())
+            game.startGame()
+            while game.running:
+                game.update()
+        elif selection == "OPTION":
+            option_screen = OptionScreen(screen)
+            option_selection = option_screen.run()
+            if option_selection == "Back":
+                continue 
+            elif option_selection in ["Pacman", "Ms Pacman", "Crossy Road", "Pacman 2", "Pacman 3"]:
+                settings.set_theme(option_selection)
+        elif selection == "EXIT":
+            pygame.quit()
+            exit()

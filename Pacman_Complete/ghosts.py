@@ -17,13 +17,6 @@ class Ghost(Entity):
         self.mode = ModeController(self)
         self.blinky = blinky
         self.homeNode = node
-        self.speed = 40
-
-    def reset(self):
-        Entity.reset(self)
-        self.points = 200
-        self.directionMethod = self.goalDirection
-        self.speed = 40
 
     def update(self, dt):
         self.sprites.update(dt)
@@ -34,11 +27,27 @@ class Ghost(Entity):
             self.chase()
         Entity.update(self, dt)
 
+    def reset(self):
+        Entity.reset(self)
+        self.points = 200
+        self.directionMethod = self.goalDirection
+
     def scatter(self):
         self.goal = Vector2()
 
     def chase(self):
         self.goal = self.pacman.position
+
+    def startFreight(self):
+        self.mode.setFreightMode()
+        if self.mode.current == FREIGHT:
+            self.setSpeed(20)
+            self.directionMethod = self.randomDirection         
+
+    def normalMode(self):
+        self.setSpeed(40)
+        self.directionMethod = self.goalDirection
+        self.homeNode.denyAccess(DOWN, self)
 
     def spawn(self):
         self.goal = self.spawnNode.position
@@ -49,22 +58,9 @@ class Ghost(Entity):
     def startSpawn(self):
         self.mode.setSpawnMode()
         if self.mode.current == SPAWN:
-            #self.setSpeed(40)
+            self.setSpeed(80)
             self.directionMethod = self.goalDirection
             self.spawn()
-
-    def startFreight(self):
-        self.mode.setFreightMode()
-        if self.mode.current == FREIGHT:
-            self.setSpeed(20)
-            self.directionMethod = self.randomDirection         
-
-    def normalMode(self):
-        #self.setSpeed(40)
-        self.directionMethod = self.goalDirection
-        self.homeNode.denyAccess(DOWN, self)
-
-
 
 
 class Blinky(Ghost):
@@ -147,6 +143,7 @@ class GhostGroup(object):
     def setSpawnNode(self, node):
         for ghost in self:
             ghost.setSpawnNode(node)
+            ghost.setSpeed(50)
 
     def updatePoints(self):
         for ghost in self:
@@ -156,6 +153,11 @@ class GhostGroup(object):
         for ghost in self:
             ghost.points = 200
 
+    def reset(self):
+        for ghost in self:
+            ghost.reset()
+            ghost.setSpeed(40)
+
     def hide(self):
         for ghost in self:
             ghost.visible = False
@@ -164,11 +166,6 @@ class GhostGroup(object):
         for ghost in self:
             ghost.visible = True
 
-    def reset(self):
-        for ghost in self:
-            ghost.reset()
-
     def render(self, screen):
         for ghost in self:
             ghost.render(screen)
-

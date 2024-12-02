@@ -13,7 +13,7 @@ class Pacman(Entity):
         self.direction = LEFT
         self.setBetweenNodes(LEFT)
         self.alive = True
-        self.speed = 80
+        self.speed = 60
         self.sprites = PacmanSprites(self)
         self.desired_direction = STOP
 
@@ -24,7 +24,7 @@ class Pacman(Entity):
         self.alive = True
         self.image = self.sprites.getStartImage()
         self.sprites.reset()
-        self.speed = 80
+        self.speed = 60
 
     def die(self):
         self.alive = False
@@ -36,8 +36,7 @@ class Pacman(Entity):
         
         if self.overshotTarget():
             self.node = self.target
-            self.setPosition()
-
+            #self.setPosition()
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
                 self.setPosition()
@@ -45,15 +44,19 @@ class Pacman(Entity):
             valid_directions = self.getValidDirections()
             if self.desired_direction in valid_directions:
                 self.direction = self.desired_direction
+            elif self.desired_direction == self.direction * -1 and self.validDirection(self.desired_direction):
+                self.direction = self.desired_direction
             elif self.direction not in valid_directions:
                 self.direction = STOP
 
             self.target = self.getNewTarget(self.direction)
-        else:
-            if self.desired_direction == self.direction * -1:
-                self.direction = self.desired_direction
-                self.reverseDirection()
-
+            #if self.target is not self.node:
+                #self.direction = self.direction
+            #else:
+                #self.target = self.getNewTarget(self.direction)
+        else: 
+            if self.oppositeDirection(self.desired_direction):
+                self.reverseDirection()    
     def set_desired_direction(self, direction):
         self.desired_direction = direction
 
@@ -83,6 +86,4 @@ class Pacman(Entity):
         d = self.position - other.position
         dSquared = d.magnitudeSquared()
         rSquared = (self.collideRadius + other.collideRadius)**2
-        if dSquared <= rSquared:
-            return True
-        return False
+        return dSquared <= rSquared
