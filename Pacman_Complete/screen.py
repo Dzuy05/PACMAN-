@@ -17,7 +17,7 @@ class TitleScreen:
 
         pygame.mixer.init()
         try:
-            pygame.mixer.music.load(os.path.join("feelit.flac"))
+            pygame.mixer.music.load(os.path.join("pac.mp3"))
             pygame.mixer.music.set_volume(0.5)
             pygame.mixer.music.play(-1)  
         except pygame.error:
