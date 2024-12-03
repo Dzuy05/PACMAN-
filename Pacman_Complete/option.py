@@ -14,7 +14,7 @@ class OptionScreen:
         # Load custom fonts
         self.title_font = pygame.font.Font("PressStart2P-Regular.ttf", 64)
         self.option_font = pygame.font.Font("PressStart2P-Regular.ttf", 32)
-        self.options = ["PACMAN", "PACMAN 3", "BACK"] 
+        self.options = ["PACMAN", "CROSSY ROAD", "BACK"] 
         self.selected = 0
 
         self.background = pygame.image.load(os.path.join("2.png")).convert()

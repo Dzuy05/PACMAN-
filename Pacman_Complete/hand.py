@@ -8,14 +8,14 @@ class HandController:
     def __init__(self):
         self.direction = None
         self.lock = threading.Lock()
-        self.running = False  # Không chạy ngay khi khởi tạo
+        self.running = False  
         self.thread = None
 
     def process_hand_gestures(self):
         mp_hands = mp.solutions.hands
         mp_drawing = mp.solutions.drawing_utils
 
-        cap = cv2.VideoCapture(0)  # 0 cho camera mặc định
+        cap = cv2.VideoCapture(0)  
 
         with self.lock:
             self.direction = None

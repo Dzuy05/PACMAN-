@@ -20,6 +20,7 @@ import settings
 import sys
 import os
 import json
+import pygetwindow as gw
 
 HIGH_SCORES_FILE = "high_scores.json"
 
@@ -224,8 +225,6 @@ class GameController(object):
         self.nodes.denyAccessList(12, 26, UP, self.ghosts)
         self.nodes.denyAccessList(15, 26, UP, self.ghosts)
 
-        
-
     def update(self):
         dt = self.clock.tick(60) / 1000.0
         self.textgroup.update(dt)
@@ -422,12 +421,16 @@ class GameController(object):
 if __name__ == "__main__":
     pygame.init()
     screen = pygame.display.set_mode(SCREENSIZE, 0, 32)
+    pygame.display.set_caption('PACMAN')
+    logo = pygame.image.load('pacman.png')
+    pygame.display.set_icon(logo)
     
     while True:
         title_screen = TitleScreen(screen)
         selection = title_screen.run()  
         
         if selection == "START":
+
             game = GameController(skin=settings.get_theme())
             game.startGame()
             while game.running:
@@ -435,10 +438,10 @@ if __name__ == "__main__":
         elif selection == "OPTION":
             option_screen = OptionScreen(screen)
             option_selection = option_screen.run()
-            if option_selection == "Back":
-                continue 
-            elif option_selection in ["Pacman", "Ms Pacman", "Crossy Road", "Pacman 2", "Pacman 3"]:
-                settings.set_theme(option_selection)
+            #if option_selection == "Back":
+                #continue 
+            #elif option_selection in ["Pacman", "Ms Pacman", "Crossy Road", "Pacman 2", "Pacman 3"]:
+                #settings.set_theme(option_selection)
         elif selection == "EXIT":
             pygame.quit()
             exit()
