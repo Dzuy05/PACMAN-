@@ -438,10 +438,6 @@ if __name__ == "__main__":
         elif selection == "OPTION":
             option_screen = OptionScreen(screen)
             option_selection = option_screen.run()
-            #if option_selection == "Back":
-                #continue 
-            #elif option_selection in ["Pacman", "Ms Pacman", "Crossy Road", "Pacman 2", "Pacman 3"]:
-                #settings.set_theme(option_selection)
         elif selection == "EXIT":
             pygame.quit()
             exit()
