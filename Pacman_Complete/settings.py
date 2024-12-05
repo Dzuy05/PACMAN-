@@ -1,6 +1,3 @@
-# FILE: settings.py
-
-# Initialize the default theme
 theme = "Pacman"
 
 def set_theme(new_theme):
