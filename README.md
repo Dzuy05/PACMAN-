@@ -56,7 +56,7 @@ Enjoy playing Pacman! If you encounter any issues, feel free to open an issue on
 - **Fruit**: Points vary depending on the type of fruit.
 
 ### LEVELS
-Each level increases in difficulty with faster ghosts and more complex maze layouts. The game continues until all lives are lost.
+Each level just change in graphic of ghosts and maze layouts, the difficulty remain the same as we play with our hand. The game continues until we don't have lives.
 
 ### LIVES
 Pacman starts with three lives. Extra lives can be earned by reaching certain score thresholds.
