@@ -41,11 +41,11 @@ class Ghost(Entity):
     def startFreight(self):
         self.mode.setFreightMode()
         if self.mode.current == FREIGHT:
-            self.setSpeed(20)
+            self.setSpeed(40)
             self.directionMethod = self.randomDirection         
 
     def normalMode(self):
-        self.setSpeed(40)
+        self.setSpeed(90)
         self.directionMethod = self.goalDirection
         self.homeNode.denyAccess(DOWN, self)
 
@@ -58,7 +58,7 @@ class Ghost(Entity):
     def startSpawn(self):
         self.mode.setSpawnMode()
         if self.mode.current == SPAWN:
-            self.setSpeed(80)
+            self.setSpeed(90)
             self.directionMethod = self.goalDirection
             self.spawn()
 
@@ -143,7 +143,7 @@ class GhostGroup(object):
     def setSpawnNode(self, node):
         for ghost in self:
             ghost.setSpawnNode(node)
-            ghost.setSpeed(50)
+            ghost.setSpeed(80)
 
     def updatePoints(self):
         for ghost in self:
@@ -156,7 +156,7 @@ class GhostGroup(object):
     def reset(self):
         for ghost in self:
             ghost.reset()
-            ghost.setSpeed(40)
+            ghost.setSpeed(80)
 
     def hide(self):
         for ghost in self:
