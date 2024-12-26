@@ -13,7 +13,7 @@ class Pacman(Entity):
         self.direction = LEFT
         self.setBetweenNodes(LEFT)
         self.alive = True
-        self.speed = 100
+        self.speed = 70
         self.sprites = PacmanSprites(self)
         self.desired_direction = STOP
 
@@ -24,7 +24,7 @@ class Pacman(Entity):
         self.alive = True
         self.image = self.sprites.getStartImage()
         self.sprites.reset()
-        self.speed = 100
+        self.speed = 70
 
     def die(self):
         self.alive = False
@@ -50,10 +50,6 @@ class Pacman(Entity):
                 self.direction = STOP
 
             self.target = self.getNewTarget(self.direction)
-            #if self.target is not self.node:
-                #self.direction = self.direction
-            #else:
-                #self.target = self.getNewTarget(self.direction)
         else: 
             if self.oppositeDirection(self.desired_direction):
                 self.reverseDirection()    

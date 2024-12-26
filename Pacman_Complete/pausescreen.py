@@ -1,5 +1,3 @@
-# FILE: pause_screen.py
-
 import pygame
 from constants import SCREENWIDTH, SCREENHEIGHT, BLACK, WHITE
 from pygame.locals import *

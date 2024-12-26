@@ -21,6 +21,7 @@ import sys
 import os
 import json
 import pygetwindow as gw
+from tutoscreen import TutorialScreen
 
 HIGH_SCORES_FILE = "high_scores.json"
 
@@ -54,7 +55,6 @@ def showScoreScreen(screen, score):
         background = pygame.image.load(os.path.join("2.png")).convert()
         background = pygame.transform.scale(background, (SCREENWIDTH, SCREENHEIGHT))
     except pygame.error as e:
-        print(f"Lỗi khi tải hình nền: {e}")
         background = None
 
     while not done:
@@ -133,7 +133,7 @@ class GameController(object):
         self.skin = skin
         self.spritesheet = Spritesheet(theme=self.skin)  
         pygame.init()
-        self.screen = pygame.display.set_mode(SCREENSIZE, 0, 32)
+        self.screen = pygame.display.set_mode(SCREENRES, 0)
         self.background = None
         self.background_norm = None
         self.background_flash = None
@@ -153,15 +153,17 @@ class GameController(object):
         self.mazedata = MazeData()
         self.hand = HandController()
         self.running = True
-
+        self.gameplay_surface = pygame.surface.Surface(SCREENSIZE).convert()
+        
+        self.offset = ((SCREENRES[0] - SCREENWIDTH) // 2, (SCREENRES[1] - SCREENHEIGHT) // 2)
         if not os.path.exists("highscores.txt"):
             with open("highscores.txt", "w") as file:
                 file.write("# Điểm số sẽ được thêm vào dưới dạng 'Tên: Điểm số'\n")
 
     def setBackground(self):
-        self.background_norm = pygame.surface.Surface(SCREENSIZE).convert()
+        self.background_norm = pygame.surface.Surface(SCREENRES).convert()
         self.background_norm.fill(BLACK)
-        self.background_flash = pygame.surface.Surface(SCREENSIZE).convert()
+        self.background_flash = pygame.surface.Surface(SCREENRES).convert()
         self.background_flash.fill(BLACK)
         self.background_norm = self.mazesprites.constructBackground(self.background_norm, self.level%5)
         self.background_flash = self.mazesprites.constructBackground(self.background_flash, 5)
@@ -197,7 +199,7 @@ class GameController(object):
             self.update()
 
     def update(self):
-        dt = self.clock.tick(30) / 1000.0
+        dt = self.clock.tick(60) / 1000.0
         self.textgroup.update(dt)
         self.pellets.update(dt)
         if not self.pause.paused:
@@ -239,6 +241,9 @@ class GameController(object):
         self.checkEvents()
         self.render()
 
+    def goBackToTitle(self):
+        self.running = False
+
     def checkEvents(self):
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -252,8 +257,15 @@ class GameController(object):
                             self.textgroup.hideText()
                             self.showEntities()
                         else:
-                            self.textgroup.showText(PAUSETXT)
-                            #self.hideEntities()
+                            self.textgroup.showText(PAUSESCTXT)
+                            self.hideEntities()
+                elif event.key == K_ESCAPE:
+                    self.goBackToTitle()    
+                elif event.key == K_ESCAPE:
+                    self.goBackToTitle()
+                elif event.key == K_t:  
+                    self.hand.toggle_camera()
+    
 
     def checkPelletEvents(self):
         pellet = self.pacman.eatPellets(self.pellets.pelletList)
@@ -340,8 +352,8 @@ class GameController(object):
         self.showEntities()
         self.level += 1
         self.pause.paused = True
-        self.startGame()
         self.textgroup.updateLevel(self.level)
+        self.startGame()
 
     def restartGame(self):
         self.lives = 5
@@ -369,7 +381,6 @@ class GameController(object):
 
     def render(self):
         self.screen.blit(self.background, (0, 0))
-        #self.nodes.render(self.screen)
         self.pellets.render(self.screen)
         if self.fruit is not None:
             self.fruit.render(self.screen)
@@ -391,17 +402,23 @@ class GameController(object):
 
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode(SCREENSIZE, 0, 32)
+    screen = pygame.display.set_mode(SCREENRES, 0, 32)
     pygame.display.set_caption('PACMAN')
     logo = pygame.image.load('pacman.png')
     pygame.display.set_icon(logo)
+    pygame.mixer.init()
+    try:
+            pygame.mixer.music.load(os.path.join("pac.mp3"))
+            pygame.mixer.music.set_volume(0)
+            pygame.mixer.music.play(-1)  
+    except pygame.error:
+            pass
     
     while True:
         title_screen = TitleScreen(screen)
         selection = title_screen.run()  
-        
         if selection == "START":
-
+            
             game = GameController(skin=settings.get_theme())
             game.startGame()
             while game.running:
@@ -409,6 +426,9 @@ if __name__ == "__main__":
         elif selection == "OPTION":
             option_screen = OptionScreen(screen)
             option_selection = option_screen.run()
+        elif selection == "TUTORIAL":
+            tutorial_screen = TutorialScreen(screen)
+            tutorial_screen.run()
         elif selection == "EXIT":
             pygame.quit()
             exit()

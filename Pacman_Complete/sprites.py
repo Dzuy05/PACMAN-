@@ -161,12 +161,14 @@ class MazeSprites(Spritesheet):
                     sprite = self.getImage(x, y)
                     rotval = int(self.rotdata[row][col])
                     sprite = self.rotate(sprite, rotval)
-                    background.blit(sprite, (col*TILEWIDTH, row*TILEHEIGHT))
+                    background.blit(sprite, (col*TILEWIDTH , row*TILEHEIGHT ))
                 elif self.data[row][col] == '=':
+                
                     sprite = self.getImage(10, 8)
-                    background.blit(sprite, (col*TILEWIDTH, row*TILEHEIGHT))
+                    background.blit(sprite, (col*TILEWIDTH , row*TILEHEIGHT))
 
         return background
 
     def rotate(self, sprite, value):
         return pygame.transform.rotate(sprite, value*90)
+

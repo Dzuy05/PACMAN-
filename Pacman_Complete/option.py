@@ -1,5 +1,3 @@
-# FILE: option_screen.py
-
 import pygame
 from constants import SCREENWIDTH, SCREENHEIGHT, BLACK, WHITE
 from pygame.locals import *
@@ -7,22 +5,28 @@ import settings
 import os
 import sys
 import time
+from hand_screen import detect_gesture
+import mediapipe as mp
+import cv2
+
+mp_hands = mp.solutions.hands
 
 class OptionScreen:
     def __init__(self, screen):
         self.screen = screen
-        # Load custom fonts
         self.title_font = pygame.font.Font("PressStart2P-Regular.ttf", 64)
         self.option_font = pygame.font.Font("PressStart2P-Regular.ttf", 32)
         self.options = ["PACMAN", "CROSSY ROAD","MARIO", "BACK"] 
         self.selected = 0
+        self.cap = None
+        self.last_gesture = None
 
         self.background = pygame.image.load(os.path.join("2.png")).convert()
         self.background = pygame.transform.scale(self.background, (SCREENWIDTH, SCREENHEIGHT))
 
         self.blink = True
         self.last_blink_time = time.time()
-        self.blink_interval = 0.5  # Seconds
+        self.blink_interval = 0.5  
 
         self.option_indicators = {}
 
@@ -52,6 +56,28 @@ class OptionScreen:
                      int(right_image.get_height() * indicator_scale))
                 )
 
+    def get_hand_gesture(self):
+        ret, frame = self.cap.read()
+        if not ret:
+            return None
+
+        frame = cv2.flip(frame, 1)
+        height, width, _ = frame.shape
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        with mp_hands.Hands(
+            static_image_mode=False,
+            max_num_hands=1,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        ) as hands:
+            result = hands.process(rgb_frame)
+            if result.multi_hand_landmarks:
+                for hand_landmarks in result.multi_hand_landmarks:
+                    gesture = detect_gesture(hand_landmarks, width, height)
+                    return gesture
+        return None
+        
     def draw(self):
         self.screen.blit(self.background, (0, 0))
 
@@ -101,10 +127,11 @@ class OptionScreen:
         pygame.display.flip()
 
     def run(self):
+        self.cap = cv2.VideoCapture(0)
         running = True
         clock = pygame.time.Clock()
         while running:
-            clock.tick(60) 
+            clock.tick(60)
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
